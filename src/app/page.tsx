@@ -126,7 +126,7 @@ export default function Home() {
 
         <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center" }}>
 
-           <p className="text-2xl bg-gray-100 text-center p-4">Gere as chaves para a semana da juventude de forma TOTALMENTE aleatória.</p>
+           <p className="text-2xl bg-gray-100 text-center rounded p-4">Gere as chaves para a semana da juventude de forma TOTALMENTE aleatória.</p>
 
         {/* SELECT MODALIDADE */}
         <div className="w-full flex flex-col gap-6 items-center">
@@ -140,6 +140,7 @@ export default function Home() {
               name="Selecionar modalidade"
               value={modalidadeSelecionada}
               onChange={(e) => setModalidadeSelecionada(e.target.value)}
+              
               className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             >
               <option value="">Selecione uma modalidade</option>
@@ -195,7 +196,15 @@ export default function Home() {
           <button
             type="button"
             onClick={handleSortear}
-            className="w-52 h-12 rounded-xl bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 text-white font-bold shadow-lg transition"
+            className={`w-52 h-12 rounded-xl text-white font-bold shadow-lg transition
+              ${
+                generoSelecionado === "masculino"
+                  ? "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500"
+                  : generoSelecionado === "feminino"
+                  ? "bg-gradient-to-r from-pink-500 to-pink-300 hover:from-pink-600 hover:to-pink-400"
+                  : "bg-gradient-to-r from-green-500 to-green-300 hover:from-green-600 hover:to-green-400"
+              }
+            `}
           >
             Gerar chave
           </button>
