@@ -1,103 +1,247 @@
-import Image from "next/image";
+"use client";
+import { useState, useRef } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
+import logo from "../assets/logo.png";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [grupos, setGrupos] = useState<string[][]>([]);
+  const tabelaRef = useRef<HTMLDivElement>(null);
+  function handleGerarPDF() {
+    if (!tabelaRef.current) return;
+    html2canvas(tabelaRef.current, { backgroundColor: "#f7fafc", scale: 2 }).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      // Header background
+      pdf.setFillColor(33, 150, 243); // blue
+      pdf.rect(0, 0, 210, 30, "F");
+
+      // Logo (if you want to add, needs base64 or url)
+      // pdf.addImage(logo.src, "PNG", 10, 5, 20, 20);
+
+      // Title
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(22);
+      pdf.text("Sorteio Semana da Juventude ", 105, 18, { align: "center" });
+
+      // Subtitle
+      pdf.setFontSize(13);
+      pdf.text("Chaves geradas para " + modalidadeSelecionada + " - " + generoSelecionado, 105, 27, { align: "center" });
+
+      // Table image
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.5);
+      pdf.setTextColor(33, 33, 33);
+      pdf.addImage(imgData, "PNG", 15, 40, 180, 0); // auto height
+
+      // Footer
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(12);
+      pdf.setTextColor(100, 100, 100);
+      const dataBR = (() => {
+        const d = new Date();
+        const dia = String(d.getDate()).padStart(2, '0');
+        const mes = String(d.getMonth() + 1).padStart(2, '0');
+        const ano = d.getFullYear();
+        return `${dia}/${mes}/${ano}`;
+      })();
+      pdf.text(`Chaves geradas de forma totalmente aleatória, às ${new Date().toLocaleTimeString()} do dia ${dataBR}`, 105, 135, { align: "center" });
+
+      // Decorative line
+      pdf.setDrawColor(33, 150, 243);
+      pdf.setLineWidth(1.5);
+      pdf.line(15, 137, 195, 137);
+
+      pdf.save(`chaves_${modalidadeSelecionada}_${generoSelecionado}.pdf`);
+    });
+  }
+  let listaDeTurmasMasculinasEMisto = [
+    "Turma 11", "Turma 12", "Turma 13", "Turma 14", "Turma 15",
+    "Turma 21", "Turma 22", "Turma 23", "Turma 24",
+    "Turma 31", "Turma 32", "Turma 33", "Turma 34",
+    "Turma TI 11", "Turma TI 12", "Turma TI20", "Turma TI30"
+  ];
+ 
+  let listaDeTurmasFemininas = [
+    "Turma 11", "Turma 12", "Turma 13", "Turma 14", "Turma 15",
+    "Turma 21", "Turma 22", "Turma 23", "Turma 24",
+    "Turma 31", "Turma 32", "Turma 33", "Turma 34"
+  ];
+
+  const modalidades = [
+    "Corrida 100m", "Revezamento 4x100", "Corrida 1500m", "Corrida 800m",
+    "Salto em distância", "Arremesso de peso", "Lançamento de dardo",
+    "Tiro de laço", "Futsal", "Basquetebol", "Gincana cultural",
+    "Mortal Kombat", "Bocha campeira", "Show de talentos", "Culinária",
+    "FIFA", "Vôlei de praia", "Xadrez", "Handebol", "Counter Strike",
+    "Gincana recreativa", "Voleibol", "Truco", "Cabo de guerra",
+    "Escape room", "Soletrando", "Sudoku", "Bisca"
+  ];
+
+  const modalidadesMistas = ["Gincana cultural", "Mortal Kombat", "Show de talentos", "Culinária", "FIFA", "Vôlei de praia", "Xadrez",  "Counter Strike", "Gincana recreativa", "Truco", "Cabo de guerra", "Escape room", "Soletrando", "Sudoku", "Bisca" ]
+
+  const [modalidadeSelecionada, setModalidadeSelecionada] = useState("");
+  const [generoSelecionado, setGeneroSelecionado] = useState("masculino");
+
+
+  function handleSortear() {
+    if (modalidadeSelecionada && generoSelecionado) {
+
+      if (modalidadesMistas.includes(modalidadeSelecionada) && generoSelecionado !== "misto") {
+        alert("A modalidade selecionada é mista, por favor selecione o gênero 'Misto'.");
+        return;
+      }
+
+      let listaDeTurmas: string[] = [];
+      if (generoSelecionado === "masculino" || generoSelecionado === "misto") {
+        listaDeTurmas = [...listaDeTurmasMasculinasEMisto].sort(() => Math.random() - 0.5);
+      } else if (generoSelecionado === "feminino") {
+        listaDeTurmas = [...listaDeTurmasFemininas].sort(() => Math.random() - 0.5);
+      }
+      const novosGrupos: string[][] = [];
+      for (let i = 0; i < 4; i++) {
+        const grupo = listaDeTurmas.splice(0, generoSelecionado === "feminino" ? 3 : 4);
+        novosGrupos.push(grupo);
+      }
+      setGrupos(novosGrupos);
+    } else {
+      alert("Por favor, selecione uma modalidade e um gênero.");
+    }
+  }
+  return (
+    <div className="font-sans items-center w-full p-8 pb-20 gap-16 ">
+      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+        <div style={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <h1 className="text-4xl font-bold">Sorteio Semana da Juventude 🏅</h1>
+          <img style={{ width: "100px" }} src={logo.src} alt="Sorteio Semana da Juventude" />
+
+        </div>
+
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "16px", alignItems: "center" }}>
+
+           <p className="text-2xl bg-gray-100 text-center p-4">Gere as chaves para a semana da juventude de forma TOTALMENTE aleatória.</p>
+
+        {/* SELECT MODALIDADE */}
+        <div className="w-full flex flex-col gap-6 items-center">
+          {/* Modalidade Select */}
+          <div className="w-full max-w-md">
+            <label htmlFor="modalidade" className="block text-lg font-semibold mb-2 text-gray-700">
+              Modalidade
+            </label>
+            <select
+              id="modalidade"
+              name="Selecionar modalidade"
+              value={modalidadeSelecionada}
+              onChange={(e) => setModalidadeSelecionada(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            >
+              <option value="">Selecione uma modalidade</option>
+              {modalidades.map((modalidade, index) => (
+                <option key={index} value={modalidade}>
+                  {modalidade}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Gênero Radio Buttons */}
+          <div className="flex gap-8">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                id="masculino"
+                name="genero"
+                value="masculino"
+                checked={generoSelecionado === "masculino"}
+                onChange={(e) => setGeneroSelecionado(e.target.value)}
+                className="accent-blue-600"
+              />
+              <span className="text-gray-700 font-medium">Masculino</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                id="feminino"
+                name="genero"
+                value="feminino"
+                checked={generoSelecionado === "feminino"}
+                onChange={(e) => setGeneroSelecionado(e.target.value)}
+                className="accent-pink-500"
+              />
+              <span className="text-gray-700 font-medium">Feminino</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                id="misto"
+                name="genero"
+                value="misto"
+                checked={generoSelecionado === "misto"}
+                onChange={(e) => setGeneroSelecionado(e.target.value)}
+                className="accent-green-500"
+              />
+              <span className="text-gray-700 font-medium">Misto</span>
+            </label>
+          </div>
+
+          {/* Botão */}
+          <button
+            type="button"
+            onClick={handleSortear}
+            className="w-52 h-12 rounded-xl bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-700 hover:to-blue-500 text-white font-bold shadow-lg transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            Gerar chave
+          </button>
+        </div>
+
+        {/* TABELA DE CHAVES ABAIXO DO BOTÃO */}
+        {grupos.length > 0 && (
+          <>
+            <div ref={tabelaRef} style={{ width: "100%", marginTop: "32px" }}>
+              <h2 className="text-2xl text-center font-bold">Chaves geradas para {modalidadeSelecionada} - {generoSelecionado}</h2>
+              <table style={{ width: "100%", marginTop: "32px", background: "#ededed", borderRadius: "8px", border: "1px solid #0b0b0b" }}>
+                <thead>
+                  <tr>
+                    <th style={{ borderRight: "1px solid #0b0b0b", padding: "12px 16px", borderBottom: "1px solid #0b0b0b" }}>Chave</th>
+                    <th style={{ padding: "12px 16px", borderBottom: "1px solid #0b0b0b" }}>Turmas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {grupos.map((grupo, idx) => (
+                    <tr style={{ width: "100%", alignItems: "center", justifyContent: "center" }} key={idx}>
+                      <td style={{ padding: "12px 16px", borderBottom: "1px solid #0b0b0b", borderRight: "1px solid #0b0b0b" }}>Chave {idx + 1}</td>
+                      <td style={{ padding: "12px 16px", borderBottom: "1px solid #0b0b0b" }}>{grupo.join(", ")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p style={{marginTop: "24px", textAlign: "center"}}>Boa sorte a todos os participantes!</p>
+
+            <button
+              style={{
+                marginTop: "24px",
+                width: "200px",
+                height: "40px",
+                borderRadius: "10px",
+                backgroundColor: "#0a0a0a"
+              }}
+              type="button"
+              onClick={handleGerarPDF}
+            >
+              <p style={{ color: "#ededed" }}>Gerar PDF</p>
+            </button>
+          </>
+        )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
-}
+  }
